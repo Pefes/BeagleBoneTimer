@@ -1,5 +1,5 @@
 def isPushed(button):
-    return
+    return true
 
 
 def lcdPrint(subtitle):
@@ -7,7 +7,7 @@ def lcdPrint(subtitle):
 
 
 def clock():
-    while (!isPushed(b1)):
+    while (not isPushed(b1)):
         lcdPrint(systime)
         wait(1)
 
@@ -22,20 +22,24 @@ def timer():
         if (isPushed(b1)):
             return
         wait(0.1)
-
-    while (!isPushed(b1)):
+    stopped = false
+    countDown = true
+    while (not isPushed(b1)):
         lcdPrint(pickedTime)
         if countDown:
             secondLess(pickedTime)
         if pickedTime < 0:
             pickedTime = 0
-            if (!stopped)
-            ring()
-    if isPushed(b2):
-        countDown = not countDown
-    if isPushed(b3):
-        newTimer = true
-        break
+            if (not stopped):
+                ring()
+            if (isPushed(b2)):
+                stopped = true
+
+        if isPushed(b2):
+            countDown = not countDown
+        if isPushed(b3):
+            newTimer = true
+            break
 
 
 if (newTimer):
@@ -49,7 +53,7 @@ def chronometer():
     while (True):
         if (isPushed(b1)):
             return
-        if (isPushed(b2))
+        if (isPushed(b2)):
             break
     while (True):
         if (isPushed(b1)):
