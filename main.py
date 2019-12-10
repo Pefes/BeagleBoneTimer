@@ -6,8 +6,12 @@ import threading
 import lcddriver
 import i2c_lib
 
-changeMode = 0
+import Adafruit_BBIO.ADC as ADC
+ADC.setup()
 
+analogPin="P9_33"
+
+changeMode = 0
 
 b1="P9_11"
 b2="P9_13"
@@ -18,8 +22,10 @@ GPIO.setup(b3, GPIO.IN)
 
 lcd = lcddriver.lcd()
 
+
 def wait(t):
     sleep(t)
+
 
 def isPushed(button):
     if GPIO.input(button):
@@ -29,32 +35,33 @@ def isPushed(button):
 
 
 def lcdPrint(subtitle):
-    lcd.lcd_display_string(subtitle, 3)  # 2 LINIA 3 zamienione z 2
+    lcd.lcd_clear()
+    lcd.lcd_display_string(str(subtitle), 0)  # 2 LINIA 3 zamienione z 2
     return
 
 
 def clock():
-    wait(1)
-
     while (changeMode == 0):
         print(datetime.datetime.now().time())
-        lcdPrint(str(datetime.datetime.now().time()))
+        lcdPrint(datetime.datetime.now().time())
         wait(1)
 
 
-
 def readPotencjometers():
-    return 1
+    pot1 = int(round(ADC.read(analogPin) * 60))
+    return pot1
+
+
 def timer():
-    while (True):
+    while (True and changeMode == 1):
         print("wybor czasu")
         pickedTime = readPotencjometers()
-        lcdPrint(pickedTime)
+        potVal = readPotencjometers()
+        lcdPrint(potVal)
+        wait(0.1)
         if (isPushed(b2)):
-            saveTimeToCountDown()
+            #saveTimeToCountDown()
             break
-        if (changeMode != 1):
-            return
 
     stopped = False
     countDown = True
@@ -75,25 +82,27 @@ def timer():
             newTimer = True
             break
 
+    #if (newTimer):
+    #   timer()
 
-    if (newTimer):
-        timer()
+def addSecond(time):
+    wait(0.01)
+    return time + 0.01
 
 
 def chronometer():
     time = 0
     saved = []
     lcdPrint(time)
+    countUp = True
 
-    while (True):
+    while (True and changeMode == 2):
         print("stoper")
-        if (changeMode != 2):
-            return
         if (isPushed(b2)):
             break
-    while (True):
-        if (changeMode != 2):
-            break
+
+    wait(0.5)
+    while (countUp and changeMode == 2):
         if (isPushed(b2)):
             countUp = not countUp
         if (countUp):
@@ -101,18 +110,18 @@ def chronometer():
         if (isPushed(b3)):
             saved.append(time)
         lcdPrint(time)
-        #wait(1)
+        print(time)
+        print(saved)
 
     i = 0
-    while (True):
-
-        if (changeMode != 2):
-            return
+    while (True and changeMode == 2):
         if (isPushed(b2)):
-            i = pickHigher(i)
+            #i = pickHigher(i)
+            i = 0
         if (isPushed(b3)):
-            i = pickLower(i)
-        lcdPrint(saved[i])
+            #i = pickLower(i)
+            i = 0
+        #lcdPrint(saved[i])
         wait(0.1)
 
 
@@ -123,7 +132,8 @@ def thread_function(name):
         timer()
 
 
-x = threading.Thread(target=thread_function, args=(1,))
+x = threading.Thread(target = thread_function, args = (1, ))
+x.setDaemon(True)
 x.start()
 
 while(True):
@@ -132,4 +142,3 @@ while(True):
         if (changeMode > 2):
             changeMode = 0
         wait(1)
-    #print(changeMode)
